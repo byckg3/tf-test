@@ -1,10 +1,15 @@
 # tf-test
-## commands
+## tf commands
+- terraform init
+- terraform init -upgrade
 - terraform fmt
 - terraform validate
 - terraform plan -var-file=default.tfvars
 - terraform apply -auto-approve -var-file=default.tfvars
 - terraform destroy -auto-approve -var-file=default.tfvars
+
+## ssh commands
+- ssh -i "~/.ssh/<PEM_FILE>" ec2-user@<PUBLIC_IP>
 
 ## reference
 - [A Simple Public IP Address API](https://api.ipify.org)

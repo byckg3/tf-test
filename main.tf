@@ -13,66 +13,56 @@ resource "aws_vpc" "main" {
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.main.id
   tags = {
-    "Name" = "tf_igw"
+    "Name" = "tf-igw"
   }
 }
 
-# configure public subnet
-resource "aws_subnet" "public_subnet" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.aws_public_subnet_cidr
-  map_public_ip_on_launch = true
-  tags = {
-    "Name" = "tf_public_subnet"
-  }
-}
-
-resource "aws_route_table" "for_public" {
+resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.this.id
   }
   tags = {
-    "Name" = "tf_table"
+    "Name" = "tf-route-table"
   }
 }
 
-resource "aws_route_table_association" "for_public" {
-  subnet_id      = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.for_public.id
+resource "aws_route_table_association" "public" {
+  count          = length(aws_subnet.public_subnets)
+  subnet_id      = aws_subnet.public_subnets[count.index].id
+  route_table_id = aws_route_table.public.id
 }
 
-resource "aws_security_group" "allow_ssh" {
-  name   = "tf-sg-allow-ssh"
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "random_shuffle" "azs" {
+  input = data.aws_availability_zones.available.names
+  result_count = length( var.public_subnets )
+}
+
+# configure public subnet
+resource "aws_subnet" "public_subnets" {
   vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [format("%s/32", var.admin_ip)]
-  }
+  count                   = length(var.public_subnets)
+  cidr_block              = var.public_subnets[count.index]
+  availability_zone       = random_shuffle.azs.result[count.index]
+  map_public_ip_on_launch = true
   tags = {
-    Name = "tf_ssh"
-  }
-}
-resource "aws_instance" "bastion_host" {
-  ami           = "ami-06ee4e2261a4dc5c3"
-  instance_type = "t2.micro"
-  key_name      = var.ec2_key_name
-  subnet_id     = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [
-    aws_security_group.allow_ssh.id
-  ]
-  tags = {
-    Name = "tf_bastion"
+    "Name" = "tf-public-subnets${count.index + 1}"
   }
 }
 
+resource "aws_subnet" "private_subnets" {
+  vpc_id = aws_vpc.main.id
 
-# resource "aws_subnet" "private_subnet" {
-#   vpc_id     = aws_vpc.main.id
-#   cidr_block = var.aws_private_subnet_cidr
-
-# }
+  count             = length(var.private_subnets)
+  cidr_block        = var.private_subnets[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  tags = {
+    "Name" = "tf_private_subnets${count.index + 1}"
+  }
+}
