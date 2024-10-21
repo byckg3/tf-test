@@ -10,6 +10,8 @@
 
 ## ssh commands
 - ssh -i "~/.ssh/<PEM_FILE>" ec2-user@<PUBLIC_IP>
+- ssh-add ~/.ssh/<PEM_FILE> && ssh -A ec2-user@<PUBLIC_IP>
+    - ssh ec2-user@<PRIVATE_IP>
 
 ## reference
 - [A Simple Public IP Address API](https://api.ipify.org)
