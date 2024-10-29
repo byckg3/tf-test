@@ -39,6 +39,19 @@ resource "aws_vpc_security_group_egress_rule" "allow_icmp_out" {
   }
 }
 
+resource "aws_vpc_security_group_egress_rule" "allow_https_out" {
+  security_group_id = aws_security_group.bastion_nlb_sg.id
+
+  ip_protocol = "TCP"
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 443
+  to_port     = 443
+
+  tags = {
+    "Name" = "tf-allow-https-out"
+  }
+}
+
 locals {
   public_sg_ids = {
     id1 = aws_security_group.bastion_nlb_sg.id,

@@ -21,10 +21,11 @@ resource "aws_launch_template" "public_lt" {
 resource "aws_instance" "bastion_host" {
   ami                         = data.aws_ami.linux.id
   instance_type               = "t2.micro"
-  key_name                    = var.ec2_key_name
   subnet_id                   = aws_subnet.public_subnets[0].id
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.bastion_nlb_sg.id]
+  key_name                    = var.ec2_key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   tags = {
     Name = "tf_bastion"
   }
@@ -41,4 +42,9 @@ resource "aws_instance" "private_instance" {
   tags = {
     Name = "tf-private-instance1"
   }
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "tf-ec2-instance-profile"
+  role = aws_iam_role.ec2_role.name
 }
