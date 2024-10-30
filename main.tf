@@ -1,6 +1,7 @@
 provider "aws" {
-  region                   = var.aws_region
-  shared_credentials_files = ["~/.aws/credentials"]
+  region  = var.aws_region
+  profile = "tf-user"
+  # shared_credentials_files = ["~/.aws/credentials"][tf-user]
 }
 
 resource "aws_vpc" "main" {
